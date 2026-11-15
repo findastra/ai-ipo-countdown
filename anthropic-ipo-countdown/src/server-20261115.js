@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { Presence, activity, validateConfig, phase, EDITION } from './card-20261115.js';
+import { countLabel, labelText } from './countdown-art-20261115.js';
 import { DiscordRPC } from './rpc-20261115.js';
 import { startupEnabled, setStartup } from './windows-startup-20261115.js';
 import { SOURCE_IDENTITY } from './source-identity-20261115.js';
@@ -123,7 +124,7 @@ const server = http.createServer(async (req, res) => {
       const now = Math.floor(Date.now() / 1000);
       return send(res, 200, { app: EDITION.app, version: VERSION, identity: SOURCE_IDENTITY, config, mode: presence.mode,
         published, connected: rpc.ready, message, startupEnabled: startupEnabled(), now, phase: phase(config, now),
-        card: activity(config, now) });
+        card: activity(config, now), count: phase(config, now) === 'counting' ? labelText(countLabel(config.targetAt - now)) : null });
     }
     if (req.method === 'POST') {
       if (req.headers.origin !== origin) return send(res, 403, { error: 'Open the local control panel to make changes.' });

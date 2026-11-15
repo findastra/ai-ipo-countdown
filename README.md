@@ -15,13 +15,14 @@ What your friends see on your Discord profile while the app is sharing:
 <th width="50%">OpenAI IPO Countdown<br><sub>next, when its date is set</sub></th>
 </tr>
 <tr>
-<td width="50%"><a href="anthropic-ipo-countdown/README.md"><img src="docs/images/anthropic-ipo-card-20261115.png" alt="Anthropic IPO Countdown card: Anthropic IPO, Nasdaq: ANT · Thu, Nov 19, 4 days to go, with the gold galaxy" width="100%"></a></td>
+<td width="50%"><a href="anthropic-ipo-countdown/README.md"><img src="docs/images/anthropic-ipo-card-20261115.png" alt="Anthropic IPO Countdown card: 4 DAYS in the middle of the gold galaxy; Anthropic IPO, Nasdaq: ANT · Thu, Nov 19, 4d 10h 6m, 106:06:46 left" width="100%"></a></td>
 <td width="50%" align="center">Coming next, with OpenAI's blue galaxy (<a href="ADDING-A-COMPANY.md">how</a>).</td>
 </tr>
 </table>
 
-The company, the ticker and date, the days to go and pricing day, Discord's live timer on the last day, then how long
-it has been trading since the opening bell. A day after the bell the card turns itself off.
+In the middle of the galaxy, one kind of time at a time: **4 DAYS**, then **23 HOURS**, **59 MINUTES** and the last
+minute's **SECONDS**. Under the ticker and date, the time left (**4d 10h 6m**), and Discord's own live timer to the
+opening bell. After the bell, how long it has been trading; a day later the card turns itself off.
 
 ## Official Artwork
 
@@ -87,8 +88,10 @@ sharing on.
 1. **The dates are reported, not final.** As of November 15, 2026: pricing on or about November 18, first trade on
    Nasdaq as ANT on November 19, counted to the 9:30am opening bell in New York. If they move, change them in
    `.local/config.json` ([how](anthropic-ipo-countdown/README.md#the-dates)).
-2. Discord draws a live timer only from a time, so far from the bell the card counts **days** in words, and the live
-   `5:12:33 left` appears in the last 24 hours. Days are counted in your PC's time zone.
+2. **The count in the galaxy is a picture** for each number (Discord shows pictures from an address, not live
+   drawing), switched by the app as time passes: days up to 14 days out (further away, the plain galaxy), then hours,
+   minutes, and one picture that counts the last 60 seconds once. It can start a second or two after the real minute,
+   as Discord fetches it. The words change once a minute; Discord's own timer beside them counts every second.
 3. After the bell the timer counts **up** from the opening bell, for a day; then the card turns itself off.
 4. **Until the app's own Discord application is registered**, add an Application ID once in `.local/config.json`
    ([how](anthropic-ipo-countdown/README.md#start-it)). The line under the card says so until it is set.
@@ -111,7 +114,10 @@ sharing on.
 4. **Tests** (every app plus the naming rules): `node --test`. Add tests with every behavior change. **Rebuild the
    downloads** with `node scripts/package.mjs` before pushing any app change. No dependencies.
 5. **The card's galaxy** is loaded by Discord from AI Discord Presence's `galaxy-card.gif` (`GALAXY_URL` in
-   `src/card-20261115.js`), whose address that repo keeps fixed. Never redraw the galaxies here.
+   `src/card-20261115.js`), whose address that repo keeps fixed. Never redraw the galaxies here. **The count pictures**
+   (`public/countdown-20261115/`, about 58 MB, not in the download) are that galaxy with the count drawn over its core,
+   made by `node scripts/make-countdown-art-20261115.mjs` (needs Playwright with Chromium for the lettering); bump
+   `ART_VERSION` in `src/countdown-art-20261115.js` when they change.
 6. **The company, ticker, exchange and dates** are one `EDITION` in `src/card-20261115.js`, with the date they were
    read and the source.
 7. **Adding another company:** copy the folder and change its `EDITION`, galaxy and port. Step by step:
