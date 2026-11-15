@@ -13,10 +13,12 @@ Rename the start file to `Start OpenAI IPO Countdown.cmd` (and the name inside `
 replace every "Anthropic IPO Countdown" / `anthropic-ipo-countdown` inside the new folder with the new name. Delete
 `.local/` if it was copied.
 
-## 2. The company and its dates (`src/card-20261115.js`)
+## 2. The company and its dates (`src/edition-20261115.js`)
 
-Change `EDITION`: `app`, `company`, `ticker`, `exchange`, `targetAt` (the first trade, at the opening bell, in seconds
-since 1970) and `pricingAt` (or `null`), and `port` (OpenAI: 38768). Write in the comment the date you read the dates
+Change `EDITION`: `app`, `company`, `galaxy`, `ticker` and `exchange` (empty until announced), `dateLabel` (a target
+such as "2027 target" in place of a date, or `null`), `targetAt` (the first trade, at the opening bell, in seconds
+since 1970), `pricingAt` (or `null`), `port`, `galaxyUrl`, `maxDays` and `countColours`. Then run
+`node scripts/make-countdown-art-20261115.mjs` for its count pictures. `openai-ipo-countdown/` was made this way. Write in the comment the date you read the dates
 and where, and never call a reported date confirmed. Update the example in `public/app-20261115.js` (`EXAMPLE`) and the
 page's text in `public/index-20261115.html`.
 

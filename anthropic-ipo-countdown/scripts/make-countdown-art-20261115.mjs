@@ -1,6 +1,6 @@
 // Makes the countdown pictures Discord shows in the middle of the galaxy: one for each number of days, hours and
 // minutes left ("4 DAYS", "23 HOURS", "59 MINUTES"), and the last minute as one picture that counts the seconds down
-// once. Each is Astra's approved gold galaxy (public/galaxy-card.gif, from AI Discord Presence) with the count drawn
+// once. Each is the company's approved galaxy (public/galaxy-card.gif, from AI Discord Presence) with the count drawn
 // over its white core: never a redrawn galaxy.
 //
 //   node scripts/make-countdown-art-20261115.mjs
@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { decodeGif, encodeGif } from './gif-codec-20261115.js';
 import { LABELS, labelText } from '../src/countdown-art-20261115.js';
+import { EDITION } from '../src/edition-20261115.js';
 
 const root = new URL('../', import.meta.url);
 const out = new URL('public/countdown-20261115/', root);
@@ -30,10 +31,11 @@ try { ({ chromium } = require('playwright')); } catch { throw new Error('This sc
 const browser = await chromium.launch();
 const page = await browser.newPage();
 const masks = {};
+const colours = EDITION.countColours;
 const labels = [...LABELS, ...Array.from({ length: 61 }, (_, s) => ({ unit: 'seconds', value: s }))];
 for (const label of labels) {
   const { number, unit } = labelText(label);
-  masks[`${label.unit}-${label.value}`] = await page.evaluate(({ size, number, unit }) => {
+  masks[`${label.unit}-${label.value}`] = await page.evaluate(({ size, number, unit, colours }) => {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
     const c = canvas.getContext('2d');
@@ -48,10 +50,10 @@ for (const label of labels) {
       c.shadowBlur = 0; c.lineJoin = 'round'; c.lineWidth = px / 7; c.strokeStyle = '#000'; c.strokeText(text, size / 2, y);
       c.fillStyle = fill; c.fillText(text, size / 2, y);
     };
-    draw(number, number.length > 2 ? 46 : 62, 92, 900, '#ffe3a3', '0px');
-    draw(unit, 15, 120, 700, '#f3d48a', '2px');
+    draw(number, number.length > 2 ? 46 : 62, 92, 900, colours.number, '0px');
+    draw(unit, 15, 120, 700, colours.unit, '2px');
     return Array.from(c.getImageData(0, 0, size, size).data);
-  }, { size: SIZE, number, unit });
+  }, { size: SIZE, number, unit, colours });
 }
 await browser.close();
 

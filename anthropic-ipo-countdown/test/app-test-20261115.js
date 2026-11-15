@@ -89,7 +89,7 @@ test('after the bell it says it is trading and counts up from the bell for a day
 
 test('settings default to the reported dates and reject bad values', () => {
   assert.equal(BUILT_IN_CLIENT_ID, '');
-  assert.deepEqual(validateConfig({}), { clientId: '', image: GALAXY_URL, title: 'Anthropic IPO', ticker: 'ANT', exchange: 'Nasdaq',
+  assert.deepEqual(validateConfig({}), { clientId: '', image: GALAXY_URL, title: 'Anthropic IPO', ticker: 'ANT', exchange: 'Nasdaq', dateLabel: null,
     targetAt: BELL, pricingAt: at(2026, 10, 18, 22), showDate: true, celebrateHours: 24, automaticOnStart: true });
   // A moved date is kept; pricing can be cleared.
   assert.equal(validateConfig({ targetAt: BELL + 86400 }).targetAt, BELL + 86400);
@@ -100,6 +100,10 @@ test('settings default to the reported dates and reject bad values', () => {
   assert.throws(() => validateConfig({ targetAt: 'Thursday' }), /first trade/);
   assert.throws(() => validateConfig({ targetAt: null }), /first trade/);
   assert.throws(() => validateConfig({ ticker: '$$' }), /ticker/);
+  // Not announced yet: an empty ticker and exchange are allowed, and the card says so.
+  const unknown = validateConfig({ ticker: '', exchange: '', dateLabel: '2027 target' });
+  assert.deepEqual([unknown.ticker, unknown.exchange, unknown.dateLabel], ['', '', '2027 target']);
+  assert.equal(activity(unknown, at(2026, 10, 15, 17), NY).details, 'Ticker TBA · 2027 target');
   assert.throws(() => validateConfig({ exchange: 'x' }), /exchange/);
   assert.throws(() => validateConfig({ celebrateHours: 999 }), /Celebrate/);
   // Control characters never reach Discord.

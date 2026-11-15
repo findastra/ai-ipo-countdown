@@ -7,8 +7,8 @@
 [findastra/astras-pet-os AGENTS.md](https://github.com/findastra/astras-pet-os/blob/main/AGENTS.md). No skimming or
 partial reads. Say in your first reply which files you read.
 
-This repo holds only the IPO countdown apps, one folder per company (`anthropic-ipo-countdown/` now,
-`openai-ipo-countdown/` next), and the guide to add another. It follows AI Discord Presence
+This repo holds only the IPO countdown apps, one folder per company (`anthropic-ipo-countdown/` and
+`openai-ipo-countdown/`), and the guide to add another. It follows AI Discord Presence
 (`findastra/ai-discord-presence`), the model for these apps (Astra, 2026-11-15: "the AI ones are the better ones"):
 the same page, stylesheet, card preview, file layout and README. The pet that manages it, Discord Damsel, keeps her own
 files and tools in `findastra/discord-tower`; never add them, or notes about them, here.
@@ -31,3 +31,5 @@ files and tools in `findastra/discord-tower`; never add them, or notes about the
 Built with:
 - Anthropic IPO Countdown, version 0.1.0, the repo and the adding guide: Claude Opus 5.5 (`claude-opus-5-5`),
   2026-11-15, at Astra's request ([card 001](handoffs/001-any-first-version-20261115.md)).
+- The count in the galaxy, OpenAI IPO Countdown and the two storefront repos: Claude Opus 5.5 (`claude-opus-5-5`),
+  2026-11-15, at Astra's request.

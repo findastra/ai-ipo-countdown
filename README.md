@@ -3,7 +3,7 @@
 *By Astra.*
 
 Let your Discord friends count down with you to an AI company's first day on the stock market. One small Windows app
-per company: Anthropic now, OpenAI next.
+per company: Anthropic and OpenAI.
 
 ## The Card
 
@@ -12,11 +12,11 @@ What your friends see on your Discord profile while the app is sharing:
 <table>
 <tr>
 <th width="50%"><a href="anthropic-ipo-countdown/README.md">Anthropic IPO Countdown</a><br><sub>Nasdaq: ANT</sub></th>
-<th width="50%">OpenAI IPO Countdown<br><sub>next, when its date is set</sub></th>
+<th width="50%"><a href="openai-ipo-countdown/README.md">OpenAI IPO Countdown</a><br><sub>2027 target, date not set</sub></th>
 </tr>
 <tr>
 <td width="50%"><a href="anthropic-ipo-countdown/README.md"><img src="docs/images/anthropic-ipo-card-20261115.png" alt="Anthropic IPO Countdown card: 4 DAYS in the middle of the gold galaxy; Anthropic IPO, Nasdaq: ANT · Thu, Nov 19, 4d 10h 6m, 106:06:46 left" width="100%"></a></td>
-<td width="50%" align="center">Coming next, with OpenAI's blue galaxy (<a href="ADDING-A-COMPANY.md">how</a>).</td>
+<td width="50%"><a href="openai-ipo-countdown/README.md"><img src="docs/images/openai-ipo-card-20261115.png" alt="OpenAI IPO Countdown card: 50 DAYS in the middle of the blue galaxy; OpenAI IPO, Ticker TBA · 2027 target, 50d 9h 55m, live timer" width="100%"></a></td>
 </tr>
 </table>
 
@@ -43,15 +43,15 @@ A small program on your PC. Its page opens in your browser and shows a live prev
 </tr>
 <tr>
 <td width="50%"><a href="anthropic-ipo-countdown/README.md"><img src="docs/images/anthropic-ipo-app-20261115.png" alt="Anthropic IPO Countdown's page: the gold galaxy with 4d 11:15:07 until ANT opens on Nasdaq, the Start, Stop, Hide Date and Quit buttons, and the card" width="100%"></a></td>
-<td width="50%" align="center">Coming next.</td>
+<td width="50%"><a href="openai-ipo-countdown/README.md"><img src="docs/images/openai-ipo-app-20261115.png" alt="OpenAI IPO Countdown's page: the blue galaxy with the count until OpenAI's 2027 target, the Start, Stop, Hide Date and Quit buttons, and the card" width="100%"></a></td>
 </tr>
 <tr>
 <td align="center"><b><a href="https://github.com/findastra/ai-ipo-countdown/raw/main/downloads/anthropic-ipo-countdown.zip">⬇ Download for Windows</a></b></td>
-<td align="center">Coming next.</td>
+<td align="center"><b><a href="https://github.com/findastra/ai-ipo-countdown/raw/main/downloads/openai-ipo-countdown.zip">⬇ Download for Windows</a></b></td>
 </tr>
 <tr>
 <td align="center"><a href="anthropic-ipo-countdown/README.md">Everything about the Anthropic app</a></td>
-<td></td>
+<td align="center"><a href="openai-ipo-countdown/README.md">Everything about the OpenAI app</a></td>
 </tr>
 </table>
 
@@ -85,9 +85,11 @@ sharing on.
 
 ## Quirks
 
-1. **The dates are reported, not final.** As of November 15, 2026: pricing on or about November 18, first trade on
-   Nasdaq as ANT on November 19, counted to the 9:30am opening bell in New York. If they move, change them in
-   `.local/config.json` ([how](anthropic-ipo-countdown/README.md#the-dates)).
+1. **The dates are reported, not final.** As of November 15, 2026: Anthropic's pricing on or about November 18 and
+   first trade on Nasdaq as ANT on November 19, counted to the 9:30am opening bell in New York
+   ([how to change them](anthropic-ipo-countdown/README.md#the-dates)). **OpenAI has not set a date**: it is targeting
+   2027, so its count runs to the first trading day of 2027, January 4, and the card says "2027 target" and "Ticker
+   TBA" ([how to set it when it is announced](openai-ipo-countdown/README.md#the-date)).
 2. **The count in the galaxy is a picture** for each number (Discord shows pictures from an address, not live
    drawing), switched by the app as time passes: days up to 14 days out (further away, the plain galaxy), then hours,
    minutes, and one picture that counts the last 60 seconds once. It can start a second or two after the real minute,
@@ -107,19 +109,19 @@ sharing on.
 1. **What's where:** one folder per app (`anthropic-ipo-countdown/`, with `src/`, `public/`, `scripts/` and `test/`);
    `downloads/` holds the built ZIPs; `docs/images/` has the README pictures; `test/` checks names and the controls page
    across every app.
-2. **Run from source:** `node src/server-20261115.js` in an app folder. The page uses port 38767 (Anthropic); OpenAI's
-   will use 38768. `ANTHROPIC_IPO_PORT` changes it. The server listens on 127.0.0.1 only and checks Host and Origin on
+2. **Run from source:** `node src/server-20261115.js` in an app folder. The page uses port 38767 (Anthropic) or 38768
+   (OpenAI); `ANTHROPIC_IPO_PORT` or `OPENAI_IPO_PORT` changes it. The server listens on 127.0.0.1 only and checks Host and Origin on
    every change.
 3. **Settings** live in each app's git-ignored `.local/config.json`. Never commit it, or any log or cache.
 4. **Tests** (every app plus the naming rules): `node --test`. Add tests with every behavior change. **Rebuild the
    downloads** with `node scripts/package.mjs` before pushing any app change. No dependencies.
 5. **The card's galaxy** is loaded by Discord from AI Discord Presence's `galaxy-card.gif` (`GALAXY_URL` in
    `src/card-20261115.js`), whose address that repo keeps fixed. Never redraw the galaxies here. **The count pictures**
-   (`public/countdown-20261115/`, about 58 MB, not in the download) are that galaxy with the count drawn over its core,
+   (`public/countdown-20261115/` in each app, not in the download: days up to 14 for Anthropic and 60 for OpenAI) are that galaxy with the count drawn over its core,
    made by `node scripts/make-countdown-art-20261115.mjs` (needs Playwright with Chromium for the lettering); bump
    `ART_VERSION` in `src/countdown-art-20261115.js` when they change.
-6. **The company, ticker, exchange and dates** are one `EDITION` in `src/card-20261115.js`, with the date they were
-   read and the source.
+6. **The company, ticker, exchange and dates** are one `EDITION` in each app's `src/edition-20261115.js`, with the date
+   they were read and the source.
 7. **Adding another company:** copy the folder and change its `EDITION`, galaxy and port. Step by step:
    [ADDING-A-COMPANY.md](ADDING-A-COMPANY.md).
 8. **Rules and handoffs:** [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md) for contributors and AI assistants; open
@@ -127,7 +129,7 @@ sharing on.
 
 ## Credits
 
-1. Anthropic IPO Countdown: built with Claude Opus 5.5, from 2026-11-15.
+1. Anthropic IPO Countdown and OpenAI IPO Countdown: built with Claude Opus 5.5, from 2026-11-15.
 2. The Discord connection, launcher and Windows startup come from
    [Ableton Live Discord Presence](https://github.com/findastra/ableton-live-discord-presence); the page, the card and
    the galaxies from [AI Discord Presence](https://github.com/findastra/ai-discord-presence).

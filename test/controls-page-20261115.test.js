@@ -10,7 +10,7 @@ import { join } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const read = (app, file) => readFileSync(join(root, app, file), 'utf8').replace(/\r\n/g, '\n');
 
-for (const app of ['anthropic-ipo-countdown']) {
+for (const app of ['anthropic-ipo-countdown', 'openai-ipo-countdown']) {
   test(`${app}: the controls page's layout`, () => {
     const html = read(app, 'public/index-20261115.html');
     assert.doesNotMatch(html, /<nav>|<form|<input|<details/);

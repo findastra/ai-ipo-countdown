@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 mkdirSync(join(root, 'downloads'), { recursive: true });
 
 // Every app folder in the repo; each becomes downloads/<folder>.zip unzipping into <folder>/.
-const apps = [['anthropic-ipo-countdown', 'Anthropic IPO Countdown']];
+const apps = [['anthropic-ipo-countdown', 'Anthropic IPO Countdown'], ['openai-ipo-countdown', 'OpenAI IPO Countdown']];
 for (const [app, title] of apps) {
   const dir = join(root, app), name = app;
   const files = [
