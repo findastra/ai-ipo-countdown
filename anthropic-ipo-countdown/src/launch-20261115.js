@@ -8,6 +8,7 @@ const app = 'anthropic-ipo-countdown';
 
 export async function launch({ fetcher = fetch, spawnProcess = spawn, identity = SOURCE_IDENTITY,
   background = process.argv.includes('--background'), replace = process.argv.includes('--replace'),
+  automatic = process.argv.includes('--automatic'),
   sleep = ms => new Promise(r => setTimeout(r, ms)) } = {}) {
   async function status() {
     let response;
@@ -43,6 +44,13 @@ export async function launch({ fetcher = fetch, spawnProcess = spawn, identity =
     }
   }
   if (!(await status())) throw new Error('Could not start Anthropic IPO Countdown. Run node src/server-20261115.js for details.');
+  // --automatic (Discord Damsel's Start & open, as for the AI presence apps): switch the running app to sharing,
+  // the same as clicking Start, even when it was already running with sharing off.
+  if (automatic) {
+    const response = await fetcher(url + 'api/mode', { method: 'POST', signal: AbortSignal.timeout(2000),
+      headers: { 'Content-Type': 'application/json', Origin: url.slice(0, -1) }, body: JSON.stringify({ mode: 'manual' }) });
+    if (response.ok === false) throw new Error('The app started but did not start sharing. Open its control panel and click Start.');
+  }
   if (!background) spawnProcess('rundll32.exe', ['url.dll,FileProtocolHandler', url], { detached: true, windowsHide: true, stdio: 'ignore' }).unref();
 }
 function isMainModule() {

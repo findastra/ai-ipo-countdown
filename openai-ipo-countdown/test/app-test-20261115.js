@@ -7,6 +7,8 @@ import { join } from 'node:path';
 import { activity, validateConfig, Presence, shortDate, bellLabel, EDITION, GALAXY_URL } from '../src/card-20261115.js';
 import { LABELS, ART_BASE, ART_VERSION } from '../src/countdown-art-20261115.js';
 import { setStartup, startupEnabled, LAUNCHER_NAME } from '../src/windows-startup-20261115.js';
+import { launch } from '../src/launch-20261115.js';
+import { SOURCE_IDENTITY } from '../src/source-identity-20261115.js';
 
 const at = (...parts) => Date.UTC(...parts) / 1000;
 // The tests read times in New York (UTC−5 in winter) so they pass in any time zone.
@@ -96,4 +98,20 @@ test('the blue galaxy is the OpenAI presence app\'s approved art, and every file
     const code = readFileSync(new URL(`${dir}/${name}`, root), 'utf8').split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
     assert.doesNotMatch(code, /ableton|apc64|38765|hourglass/i, `${dir}/${name}`);
   }
+});
+
+test('Discord Damsel\'s Start & open (--automatic) switches a running app that is stopped back to sharing', async () => {
+  const posts = [];
+  const fetcher = async (url, options = {}) => {
+    if (options.method === 'POST') { posts.push({ url, body: JSON.parse(options.body), origin: options.headers.Origin }); return { ok: true, json: async () => ({ ok: true }) }; }
+    return { ok: true, json: async () => ({ app: 'openai-ipo-countdown', identity: SOURCE_IDENTITY, mode: 'off' }) };
+  };
+  await launch({ fetcher, spawnProcess: () => { throw new Error('nothing new is started'); }, background: true, automatic: true });
+  assert.equal(posts.length, 1);
+  assert.match(posts[0].url, /\/api\/mode$/);
+  assert.deepEqual(posts[0].body, { mode: 'manual' });
+  // Without --automatic, a stopped app is left as it is.
+  posts.length = 0;
+  await launch({ fetcher, spawnProcess: () => { throw new Error('nothing new is started'); }, background: true, automatic: false });
+  assert.equal(posts.length, 0);
 });
