@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 // Every app in the repo: [folder, company as written on the card].
-const apps = [['anthropic-ipo-countdown', 'Anthropic']];
+const apps = [['anthropic-ipo-countdown', 'Anthropic'], ['openai-ipo-countdown', 'OpenAI']];
 const files = ['README.md', 'CLAUDE.md', 'AGENTS.md', 'ADDING-A-COMPANY.md', ...apps.flatMap(([app]) =>
   ['README.md', 'public/index-20261115.html', 'public/app-20261115.js', 'src/server-20261115.js', 'src/launch-20261115.js',
     'scripts/startup-20261115.js', 'src/windows-startup-20261115.js', 'package.json'].map(f => `${app}/${f}`))];
@@ -34,7 +34,7 @@ test('each app uses its folder name for its title, start file, card title and do
   for (const [app, company] of apps) {
     const title = `${company} IPO Countdown`;
     assert.match(readFileSync(join(root, app, 'README.md'), 'utf8'), new RegExp(`^# ${title}\\r?\\n`));
-    assert.match(readFileSync(join(root, app, 'src/card-20261115.js'), 'utf8'), new RegExp(`company: '${company}'`));
+    assert.match(readFileSync(join(root, app, 'src/edition-20261115.js'), 'utf8'), new RegExp(`company: '${company}'`));
     assert.match(readFileSync(join(root, app, 'public/index-20261115.html'), 'utf8'), new RegExp(`<title>${title}</title>`));
     readFileSync(join(root, app, `Start ${title}.cmd`)); // throws if the start file is missing
     assert.match(readFileSync(join(root, app, 'Enable Automatic Startup.cmd'), 'utf8'), new RegExp(`Start ${title}\\.cmd`));

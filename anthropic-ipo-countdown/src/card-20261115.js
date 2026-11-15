@@ -1,29 +1,13 @@
 // What the Discord card says, and the settings that shape it.
 
-// One edition per company. The OpenAI edition is a copy of this folder with its own EDITION, port and galaxy
-// (README, "Adding a company").
-export const EDITION = Object.freeze({
-  app: 'anthropic-ipo-countdown',
-  company: 'Anthropic',
-  // Reported on 2026-11-15 (roadshow from 2026-11-10): ticker ANT on Nasdaq, priced on or about Wednesday
-  // 18 November, first trade expected Thursday 19 November 2026. Not final: the page lets you change every one.
-  ticker: 'ANT',
-  exchange: 'Nasdaq',
-  // 9:30am in New York (the opening bell), 19 November 2026 = 14:30 UTC.
-  targetAt: 1795098600,
-  // 5pm in New York, 18 November 2026 = 22:00 UTC: IPOs are usually priced after that day's close.
-  pricingAt: 1795039200,
-  // This app's control page, on this PC only (OpenAI's edition: 38768).
-  port: 38767,
-});
+import { EDITION } from './edition-20261115.js';
+export { EDITION };
 
 // The project's own Discord application. Not registered yet: until Astra registers one (a non-brand name, such as
 // "IPO Countdown", which can serve every edition) and its ID is written here, the page asks for an Application ID once.
 export const BUILT_IN_CLIENT_ID = '';
 
-// Card art: Astra's approved gold five-arm galaxy (2026-10-30), the same GIF Anthropic Discord Presence shows. Discord
-// loads it from findastra/ai-discord-presence, whose rules keep that address fixed.
-export const GALAXY_URL = 'https://raw.githubusercontent.com/findastra/ai-discord-presence/main/anthropic-discord-presence/public/galaxy-card.gif?v=10';
+export const GALAXY_URL = EDITION.galaxyUrl;
 
 import { countLabel, countArtUrl, countdownWords } from './countdown-art-20261115.js';
 
@@ -66,6 +50,23 @@ export function countdownLine(config, now, offset) {
   return `${Math.floor(days / 7)} weeks to go`;
 }
 
+// "Nasdaq: ANT", or what is known so far when the exchange or ticker is not announced.
+export function listing(config) {
+  if (config.exchange && config.ticker) return `${config.exchange}: ${config.ticker}`;
+  if (config.exchange) return `${config.exchange} · ticker TBA`;
+  return config.ticker ? `Ticker ${config.ticker}` : 'Ticker TBA';
+}
+// The date as words: "Thu, Nov 19", or the label for a target that is not a date yet ("2027 target").
+export function dateWords(config, offset) {
+  return config.dateLabel || shortDate(config.targetAt, offset);
+}
+// The words under the big count on the page.
+export function bellLabel(config, trading) {
+  const where = config.ticker && config.exchange ? `${config.ticker} opens on ${config.exchange}` : `${EDITION.company}'s ${config.dateLabel || 'first trade'}`;
+  if (trading) return config.exchange ? `on ${config.exchange} since the opening bell` : 'since the opening bell';
+  return `until ${where}`;
+}
+
 export class Presence {
   mode = 'off';
   setMode(mode) {
@@ -82,8 +83,8 @@ export class Presence {
 export function activity(config, now = Math.floor(Date.now() / 1000), offset) {
   const where = phase(config, now);
   if (where === 'unset' || where === 'over') return null;
-  const listing = `${config.exchange}: ${config.ticker}`;
-  const date = shortDate(config.targetAt, offset);
+  const listed = listing(config);
+  const date = dateWords(config, offset);
   const card = {
     type: 0,
     // Card title. Discord shows this instead of the registered app name.
@@ -94,12 +95,12 @@ export function activity(config, now = Math.floor(Date.now() / 1000), offset) {
   // The built-in galaxy carries the count; a picture of your own stays as it is.
   if (where === 'counting' && config.image === GALAXY_URL) card.assets.large_image = countArtUrl(countLabel(left)) ?? GALAXY_URL;
   if (where === 'trading') {
-    card.details = `Now trading on ${listing}`;
+    card.details = config.exchange || config.ticker ? `Now trading on ${listed}` : `${EDITION.company} is trading`;
     card.state = "It's here!";
     card.timestamps = { start: config.targetAt };
     return card;
   }
-  card.details = config.showDate ? `${listing} · ${date}` : listing;
+  card.details = config.showDate ? `${listed} · ${date}` : listed;
   card.state = countdownWords(left);
   card.assets.large_text = `${config.showDate ? `${config.title} · ${date}` : config.title} · ${countdownLine(config, now, offset)}`;
   card.timestamps = { end: config.targetAt };
@@ -120,19 +121,21 @@ export function validateConfig(input = {}) {
   if (clientId && !/^\d{17,20}$/.test(clientId)) throw new Error('Paste the 17–20 digit Discord Application ID. No token needed.');
   const savedImage = String(input.image || GALAXY_URL).trim();
   // Refresh only the built-in galaxy; keep custom image URLs and asset keys.
-  const image = /^https:\/\/raw\.githubusercontent\.com\/findastra\/ai-discord-presence\/main\/anthropic-discord-presence\/public\/galaxy-card\.gif(?:\?v=\d+)?$/.test(savedImage) ? GALAXY_URL : savedImage;
+  const image = savedImage.split('?')[0] === GALAXY_URL.split('?')[0] ? GALAXY_URL : savedImage;
   if (!/^[a-z0-9_-]{1,128}$/.test(image) && !/^https:\/\/[^\s"<>]{1,240}$/.test(image)) throw new Error('Use an uploaded asset key or an https image link.');
   // The first trade is required; only the pricing date can be left empty.
   const targetAt = time(input.targetAt === null ? 'none' : input.targetAt, EDITION.targetAt, 'Choose the date and time of the first trade.');
   const pricingAt = time(input.pricingAt, EDITION.pricingAt, 'Choose the pricing date and time, or leave it empty.');
   const title = clean(input.title ?? `${EDITION.company} IPO`, 64);
   if (title.length < 2) throw new Error('Give the card a title of at least 2 letters.');
+  // The ticker and exchange can be empty until they are announced.
   const ticker = clean(input.ticker ?? EDITION.ticker, 10).toUpperCase();
-  if (!/^[A-Z][A-Z0-9.]{0,9}$/.test(ticker)) throw new Error('Use a ticker of letters and numbers, such as ANT.');
+  if (ticker && !/^[A-Z][A-Z0-9.]{0,9}$/.test(ticker)) throw new Error('Use a ticker of letters and numbers, such as ANT.');
   const exchange = clean(input.exchange ?? EDITION.exchange, 24);
-  if (exchange.length < 2) throw new Error('Name the exchange, such as Nasdaq.');
+  if (exchange.length === 1) throw new Error('Name the exchange, such as Nasdaq.');
+  const dateLabel = clean(input.dateLabel ?? EDITION.dateLabel ?? '', 24) || null;
   const celebrateHours = input.celebrateHours === undefined ? 24 : Number(input.celebrateHours);
   if (!Number.isInteger(celebrateHours) || celebrateHours < 0 || celebrateHours > 168) throw new Error('Celebrate for 0 to 168 hours.');
-  return { clientId, image, title, ticker, exchange, targetAt, pricingAt, showDate: input.showDate !== false,
+  return { clientId, image, title, ticker, exchange, dateLabel, targetAt, pricingAt, showDate: input.showDate !== false,
     celebrateHours, automaticOnStart: input.automaticOnStart !== false };
 }

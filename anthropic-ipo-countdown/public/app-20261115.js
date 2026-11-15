@@ -3,7 +3,8 @@ const hosted = document.body.hasAttribute('data-hosted') || location.protocol ==
 let state;
 let ended = false;
 // What the public page shows: the expected first trade, Thursday 19 November 2026, 9:30am in New York.
-const EXAMPLE = { title: 'Anthropic IPO', ticker: 'ANT', exchange: 'Nasdaq', targetAt: 1795098600 };
+const EXAMPLE = { title: 'Anthropic IPO', details: 'Nasdaq: ANT · Thu, Nov 19', targetAt: 1795098600,
+  bell: 'until ANT opens on Nasdaq', trading: 'ANT is trading', since: 'on Nasdaq since the opening bell' };
 
 async function request(path, body) {
   const response = await fetch(path, body === undefined ? {} : {
@@ -42,8 +43,8 @@ function drawTimer() {
   const config = state?.config || EXAMPLE;
   const left = config.targetAt - now;
   document.querySelector('.bell').classList.toggle('live', left <= 0);
-  $('big-count').textContent = left > 0 ? clock(left) : `${config.ticker} is trading`;
-  $('big-label').textContent = left > 0 ? `until ${config.ticker} opens on ${config.exchange}` : `on ${config.exchange} since the opening bell`;
+  $('big-count').textContent = left > 0 ? clock(left) : hosted ? EXAMPLE.trading : (state.config.ticker ? `${state.config.ticker} is trading` : 'Trading');
+  $('big-label').textContent = hosted ? (left > 0 ? EXAMPLE.bell : EXAMPLE.since) : state?.bell || '';
 }
 
 // The count over the card's galaxy, as Discord shows it: only days, else hours, else minutes, else seconds.
@@ -65,7 +66,7 @@ function drawCount() {
 function drawCard(card, config) {
   drawCount();
   $('title-preview').textContent = card?.name || config.title;
-  $('event-preview').textContent = card?.details || `${config.exchange}: ${config.ticker}`;
+  $('event-preview').textContent = card?.details || config.details || '';
   $('state-preview').textContent = card?.state || 'First trading day is over';
 }
 
@@ -90,7 +91,7 @@ $('date').addEventListener('click', async () => {
     const on = $('date').getAttribute('aria-pressed') !== 'true';
     $('date').setAttribute('aria-pressed', String(on));
     $('date').textContent = on ? 'Hide Date' : 'Show Date';
-    $('event-preview').textContent = on ? 'Nasdaq: ANT · Thu, Nov 19' : 'Nasdaq: ANT';
+    $('event-preview').textContent = on ? EXAMPLE.details : EXAMPLE.details.split(' · ')[0];
     return;
   }
   if (!state) return;
@@ -138,7 +139,7 @@ if (hosted) {
   const left = Math.max(0, EXAMPLE.targetAt - Math.floor(Date.now() / 1000));
   const words = left <= 0 ? "It's here!" : left < 60 ? 'Under a minute' : [[Math.floor(left / 86400), 'd'], [Math.floor(left / 3600) % 24, 'h'], [Math.floor(left / 60) % 60, 'm']]
     .filter(([n], i, all) => n || all.slice(0, i).some(([m]) => m) || i === 2).map(([n, u]) => n + u).join(' ');
-  state = { config: EXAMPLE, card: { name: EXAMPLE.title, details: 'Nasdaq: ANT · Thu, Nov 19', state: words, timestamps: left > 0 ? { end: EXAMPLE.targetAt } : undefined } };
+  state = { config: EXAMPLE, card: { name: EXAMPLE.title, details: EXAMPLE.details, state: words, timestamps: left > 0 ? { end: EXAMPLE.targetAt } : undefined } };
   drawCard(state.card, EXAMPLE);
   $('manual').setAttribute('aria-pressed', 'true');
   $('off').setAttribute('aria-pressed', 'false');

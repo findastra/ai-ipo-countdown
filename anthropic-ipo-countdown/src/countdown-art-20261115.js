@@ -3,7 +3,9 @@
 // Discord shows a picture from an address, so each count is its own picture, made by
 // scripts/make-countdown-art-20261115.mjs and loaded from GitHub.
 
-export const MAX_DAYS = 14;
+import { EDITION } from './edition-20261115.js';
+
+export const MAX_DAYS = EDITION.maxDays;
 export const LABELS = [
   ...Array.from({ length: MAX_DAYS }, (_, i) => ({ unit: 'days', value: i + 1 })),
   ...Array.from({ length: 23 }, (_, i) => ({ unit: 'hours', value: i + 1 })),
@@ -27,7 +29,7 @@ export function countLabel(secondsLeft) {
 
 // The picture for that count, on GitHub. More than MAX_DAYS days away there is no picture: the plain galaxy shows.
 // Bump ?v= whenever the pictures change, so Discord fetches the new ones.
-export const ART_BASE = 'https://raw.githubusercontent.com/findastra/ai-ipo-countdown/main/anthropic-ipo-countdown/public/countdown-20261115/';
+export const ART_BASE = `https://raw.githubusercontent.com/findastra/ai-ipo-countdown/main/${EDITION.app}/public/countdown-20261115/`;
 export const ART_VERSION = 1;
 export function countArtUrl(label) {
   if (!label || (label.unit === 'days' && label.value > MAX_DAYS)) return null;
