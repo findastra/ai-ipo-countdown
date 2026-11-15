@@ -28,12 +28,15 @@ is needed. The card's line under the timer says so until it is set.
 
 ## What Discord shows
 
-| When | The card |
-| --- | --- |
-| Days before | **Anthropic IPO** · Nasdaq: ANT · Thu, Nov 19 · 4 days to go |
-| Pricing day | Pricing today, then Priced · trading tomorrow |
-| The last 24 hours | Discord's own live timer, such as 5:12:33 left; Opening bell today on the day |
-| After the opening bell | Now trading on Nasdaq: ANT · It's here!, with Discord counting up from the bell |
+| When | In the galaxy | The words |
+| --- | --- | --- |
+| Days before | **4 DAYS** | **Anthropic IPO** · Nasdaq: ANT · Thu, Nov 19 · 4d 10h 6m · Discord's live timer to the bell |
+| The last day | **23 HOURS** … **1 HOUR** | 5h 12m, and the timer |
+| The last hour | **59 MINUTES** … **1 MINUTE** | 12m, and the timer |
+| The last minute | **60 SECONDS** counting down once | Under a minute, and the timer |
+| After the opening bell | the plain galaxy | Now trading on Nasdaq: ANT · It's here!, with Discord counting up from the bell |
+
+Hover the picture for the date in words and the pricing day (Pricing today, Priced · trading tomorrow).
 
 A day after the bell the card turns itself off. **Hide Date** takes the date off the card. Days are counted in your
 PC's time zone; the bell is 9:30am in New York.

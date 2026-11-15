@@ -30,6 +30,12 @@ apps", with an OpenAI one later (Astra, 2026-11-15).
 - `node --test` at the root: 12 of 12 passed. The page drawn in Chromium at 1280×860 and phone width; the download
   unzipped and ran. Discord itself not reached (Windows only): **not verified here**.
 
+## The count in the galaxy (2026-11-15)
+- Astra asked for one kind of time in the middle of the swirl (days, then hours, minutes, seconds) and the timer as the
+  card's text: done on `claude/swirl-countdown-20261115` ([changes](../changes/swirl-countdown-20261115.md)), 14 of 14
+  tests. Card live on her profile through Ableton Live Presence's application ID in her local settings, until an
+  "IPO Countdown" application is registered.
+
 ## Open
 - Done 2026-11-15: Astra OK'd the repo ("You can have access to... whatever repos on GitHub you want"); created public
   from her PC, this commit moved the app here from the hub's `drafts/`.

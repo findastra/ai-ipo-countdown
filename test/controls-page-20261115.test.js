@@ -33,7 +33,7 @@ for (const app of ['anthropic-ipo-countdown']) {
   test(`${app}: the same base stylesheet as AI Discord Presence, plus only the countdown`, () => {
     const css = read(app, 'public/style-20261115.css');
     const extra = css.slice(css.indexOf('/* IPO countdown (2026-11-15)'));
-    assert.ok(extra.length > 0 && extra.length < 1500, 'the IPO additions stay one short block at the end');
+    assert.ok(extra.length > 0 && extra.length < 2600, 'the IPO additions stay one short block at the end');
     assert.match(css, /\.buttons\{display:flex;flex-wrap:nowrap/);
   });
 

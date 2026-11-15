@@ -5,6 +5,7 @@ import * as fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { activity, validateConfig, Presence, countdownLine, shortDate, daysLeft, phase, EDITION, GALAXY_URL, BUILT_IN_CLIENT_ID } from '../src/card-20261115.js';
+import { LABELS, ART_BASE, ART_VERSION, countLabel, labelText, countdownWords } from '../src/countdown-art-20261115.js';
 import { setStartup, startupEnabled, LAUNCHER_NAME } from '../src/windows-startup-20261115.js';
 
 const at = (...parts) => Date.UTC(...parts) / 1000;
@@ -21,29 +22,62 @@ test('the edition is Anthropic on Nasdaq as ANT, first trade Thursday 19 Novembe
   assert.equal(config.title, 'Anthropic IPO');
 });
 
-test('the card counts days, names pricing day, then shows Discord\'s live timer on the last day', () => {
+test('the card shows the ticker and date, the time left as "4d 5h 12m" and Discord\'s live timer to the bell', () => {
   const sunday = activity(config, at(2026, 10, 15, 17), NY);
   assert.equal(sunday.name, 'Anthropic IPO');
   assert.equal(sunday.details, 'Nasdaq: ANT · Thu, Nov 19');
-  assert.equal(sunday.state, '4 days to go');
-  assert.equal(sunday.timestamps, undefined);
-  assert.equal(sunday.assets.large_image, GALAXY_URL);
-  assert.equal(sunday.assets.large_text, 'Anthropic IPO · Thu, Nov 19');
-  // Wednesday: pricing day, before and after the price is set.
+  // Sunday 15 November, noon in New York, to Thursday 9:30am: 3 days, 21 hours and 30 minutes.
+  assert.equal(sunday.state, '3d 21h 30m');
+  assert.deepEqual(sunday.timestamps, { end: BELL });
+  assert.equal(sunday.assets.large_text, 'Anthropic IPO · Thu, Nov 19 · 4 days to go');
+  // Pricing day is in the words you see when you hover the picture.
   assert.equal(countdownLine(config, at(2026, 10, 18, 15), NY), 'Pricing today');
   assert.equal(countdownLine(config, at(2026, 10, 18, 23), NY), 'Priced · trading tomorrow');
-  // Within 24 hours of the bell Discord counts down itself.
-  assert.deepEqual(activity(config, at(2026, 10, 18, 23), NY).timestamps, { end: BELL });
-  assert.equal(activity(config, at(2026, 10, 19, 12), NY).state, 'Opening bell today');
-  // Without a pricing date the night before is just tomorrow; far away it counts weeks.
+  assert.equal(activity(config, BELL - 5 * 3600 - 12 * 60, NY).state, '5h 12m');
+  assert.equal(activity(config, BELL - 12 * 60 - 30, NY).state, '12m');
+  assert.equal(activity(config, BELL - 30, NY).state, 'Under a minute');
   assert.equal(countdownLine({ ...config, pricingAt: null }, at(2026, 10, 18, 23), NY), 'Trading tomorrow');
-  assert.equal(countdownLine(config, at(2026, 6, 1), NY), '20 weeks to go');
-  const quiet = activity({ ...config, showDate: false }, at(2026, 10, 15), NY);
-  assert.deepEqual([quiet.details, quiet.assets.large_text], ['Nasdaq: ANT', 'Anthropic IPO']);
+  const quiet = activity({ ...config, showDate: false }, at(2026, 10, 15, 17), NY);
+  assert.deepEqual([quiet.details, quiet.assets.large_text], ['Nasdaq: ANT', 'Anthropic IPO · 4 days to go']);
+});
+
+test('the galaxy in the middle of the card shows one kind of time: days, then hours, minutes and seconds', () => {
+  const art = s => activity(config, BELL - s, NY).assets.large_image;
+  assert.equal(art(3 * 86400 + 21 * 3600), `${ART_BASE}days-3.gif?v=${ART_VERSION}`);
+  assert.equal(art(86400), `${ART_BASE}days-1.gif?v=${ART_VERSION}`);
+  assert.equal(art(86399), `${ART_BASE}hours-23.gif?v=${ART_VERSION}`);
+  assert.equal(art(3600), `${ART_BASE}hours-1.gif?v=${ART_VERSION}`);
+  assert.equal(art(3599), `${ART_BASE}minutes-59.gif?v=${ART_VERSION}`);
+  assert.equal(art(60), `${ART_BASE}minutes-1.gif?v=${ART_VERSION}`);
+  assert.equal(art(59), `${ART_BASE}seconds.gif?v=${ART_VERSION}`);
+  // More than 14 days away, and after the bell, the plain galaxy; a picture of your own is never replaced.
+  assert.equal(art(15 * 86400), GALAXY_URL);
+  assert.equal(activity(config, BELL + 60, NY).assets.large_image, GALAXY_URL);
+  assert.equal(activity({ ...config, image: 'my-picture' }, BELL - 3600, NY).assets.large_image, 'my-picture');
+  assert.deepEqual(labelText(countLabel(4 * 86400 + 5)), { number: '4', unit: 'DAYS' });
+  assert.deepEqual(labelText(countLabel(3600)), { number: '1', unit: 'HOUR' });
+  assert.deepEqual(labelText(countLabel(59.2)), { number: '60', unit: 'SECONDS' });
+  assert.equal(countLabel(0), null);
+  assert.equal(countdownWords(2 * 86400 + 5), '2d 0h 0m');
+});
+
+test('every count picture the card can ask for is in the repo, a GIF Discord accepts', () => {
+  const dir = new URL('../public/countdown-20261115/', import.meta.url);
+  const files = [...LABELS.map(l => `${l.unit}-${l.value}.gif`), 'seconds.gif'];
+  for (const file of files) {
+    const gif = readFileSync(new URL(file, dir));
+    assert.equal(gif.subarray(0, 6).toString(), 'GIF89a', file);
+    assert.ok(gif.length < 10 * 1024 * 1024, file);
+  }
+  assert.equal(readdirSync(dir).length, files.length);
+  // The last minute plays once and stops on 0; the others loop.
+  assert.ok(!readFileSync(new URL('seconds.gif', dir)).includes('NETSCAPE2.0'));
+  assert.ok(readFileSync(new URL('days-4.gif', dir)).includes('NETSCAPE2.0'));
 });
 
 test('after the bell it says it is trading and counts up from the bell for a day, then the card goes away', () => {
   const live = activity(config, BELL + 90, NY);
+  assert.equal(live.assets.large_text, 'Anthropic IPO · Thu, Nov 19');
   assert.equal(live.details, 'Now trading on Nasdaq: ANT');
   assert.equal(live.state, "It's here!");
   assert.deepEqual(live.timestamps, { start: BELL });
@@ -107,7 +141,9 @@ test('the gold galaxy is the Anthropic presence app\'s approved art, and every f
   const server = readFileSync(new URL('src/server-20261115.js', root), 'utf8');
   for (const [, file] of html.matchAll(/(?:src|href)="\.\/([^"]+)"/g)) assert.ok(server.includes(`'/${file}'`), file);
   for (const dir of ['src', 'public', 'scripts']) for (const name of readdirSync(new URL(dir + '/', root))) {
-    if (!/\.(?:js|html|css)$/.test(name) || name.startsWith('official-galaxy')) continue;
-    assert.doesNotMatch(readFileSync(new URL(`${dir}/${name}`, root), 'utf8'), /ableton|apc64|38765|hourglass/i, `${dir}/${name}`);
+    if (!/\.(?:m?js|html|css)$/.test(name) || name.startsWith('official-galaxy')) continue;
+    // Comments may credit the Ableton app; code may not carry its names or port.
+    const code = readFileSync(new URL(`${dir}/${name}`, root), 'utf8').split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
+    assert.doesNotMatch(code, /ableton|apc64|38765|hourglass/i, `${dir}/${name}`);
   }
 });

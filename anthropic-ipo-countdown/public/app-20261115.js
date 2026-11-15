@@ -27,6 +27,7 @@ function drawTimer() {
   const line = $('timer').parentElement;
   line.classList.remove('running');
   const card = state?.card;
+  if (hosted) drawCount();
   if (ended) $('timer').textContent = 'App closed. You can close this tab.';
   else if (!hosted && state && !state.config.clientId) $('timer').textContent = 'Add a Discord Application ID (README)';
   else if (!hosted && state?.mode !== 'manual') $('timer').textContent = 'Ready when you are';
@@ -45,7 +46,24 @@ function drawTimer() {
   $('big-label').textContent = left > 0 ? `until ${config.ticker} opens on ${config.exchange}` : `on ${config.exchange} since the opening bell`;
 }
 
+// The count over the card's galaxy, as Discord shows it: only days, else hours, else minutes, else seconds.
+function countNow(targetAt) {
+  const left = targetAt - Math.floor(Date.now() / 1000);
+  if (left <= 0) return null;
+  const [value, unit] = left >= 86400 ? [Math.floor(left / 86400), 'DAY'] : left >= 3600 ? [Math.floor(left / 3600), 'HOUR']
+    : left >= 60 ? [Math.floor(left / 60), 'MINUTE'] : [left, 'SECOND'];
+  return { number: String(value), unit: value === 1 ? unit : unit + 'S' };
+}
+function drawCount() {
+  const count = hosted ? countNow(EXAMPLE.targetAt) : state?.count;
+  $('card-count').hidden = !count;
+  if (!count) return;
+  $('count-number').textContent = count.number;
+  $('count-unit').textContent = count.unit;
+}
+
 function drawCard(card, config) {
+  drawCount();
   $('title-preview').textContent = card?.name || config.title;
   $('event-preview').textContent = card?.details || `${config.exchange}: ${config.ticker}`;
   $('state-preview').textContent = card?.state || 'First trading day is over';
@@ -116,10 +134,11 @@ if (hosted) {
   document.body.classList.add('hosted');
   $('download').hidden = false;
   $('quit').hidden = true;
-  const day = seconds => { const d = new Date(seconds * 1000); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000; };
-  const days = day(EXAMPLE.targetAt) - day(Math.floor(Date.now() / 1000));
-  const words = days > 1 ? `${days} days to go` : days === 1 ? 'Trading tomorrow' : days === 0 ? 'Opening bell today' : "It's here!";
-  state = { config: EXAMPLE, card: { name: EXAMPLE.title, details: 'Nasdaq: ANT · Thu, Nov 19', state: words } };
+  // The example card counts as the app does: "4d 5h 12m", with Discord's live timer to the bell.
+  const left = Math.max(0, EXAMPLE.targetAt - Math.floor(Date.now() / 1000));
+  const words = left <= 0 ? "It's here!" : left < 60 ? 'Under a minute' : [[Math.floor(left / 86400), 'd'], [Math.floor(left / 3600) % 24, 'h'], [Math.floor(left / 60) % 60, 'm']]
+    .filter(([n], i, all) => n || all.slice(0, i).some(([m]) => m) || i === 2).map(([n, u]) => n + u).join(' ');
+  state = { config: EXAMPLE, card: { name: EXAMPLE.title, details: 'Nasdaq: ANT · Thu, Nov 19', state: words, timestamps: left > 0 ? { end: EXAMPLE.targetAt } : undefined } };
   drawCard(state.card, EXAMPLE);
   $('manual').setAttribute('aria-pressed', 'true');
   $('off').setAttribute('aria-pressed', 'false');

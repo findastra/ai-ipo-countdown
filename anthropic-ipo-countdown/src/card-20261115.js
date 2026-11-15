@@ -25,6 +25,8 @@ export const BUILT_IN_CLIENT_ID = '';
 // loads it from findastra/ai-discord-presence, whose rules keep that address fixed.
 export const GALAXY_URL = 'https://raw.githubusercontent.com/findastra/ai-discord-presence/main/anthropic-discord-presence/public/galaxy-card.gif?v=10';
 
+import { countLabel, countArtUrl, countdownWords } from './countdown-art-20261115.js';
+
 const DAY = 86400;
 const HOUR = 3600;
 
@@ -53,7 +55,7 @@ export function phase(config, now) {
   return now < config.targetAt + config.celebrateHours * HOUR ? 'trading' : 'over';
 }
 
-// The second line: how far off it is, with the pricing day on the way.
+// How far off it is in words, with the pricing day on the way: shown when you hover the picture.
 export function countdownLine(config, now, offset) {
   const days = daysLeft(config.targetAt, now, offset);
   const pricing = Number.isInteger(config.pricingAt) && config.pricingAt < config.targetAt ? config.pricingAt : null;
@@ -72,9 +74,10 @@ export class Presence {
   }
 }
 
-// The card Discord shows.
-// - Counting: "Anthropic IPO" / "Nasdaq: ANT · Thu, Nov 19" / "4 days to go". In the last 24 hours Discord draws the
-//   live "5:12:33 left" from timestamps.end; further out it would read as hundreds of hours, so words count the days.
+// The card Discord shows (Astra, 2026-11-15: "just show me the timer on the card").
+// - Counting: "Anthropic IPO" / "Nasdaq: ANT · Thu, Nov 19" / "4d 5h 12m", with Discord's own live timer to the bell
+//   (timestamps.end) and, in the middle of the galaxy, one kind of time: "4 DAYS", then hours, minutes and seconds
+//   (src/countdown-art-20261115.js). The words change once a minute, well within what Discord accepts.
 // - Trading: "Now trading on Nasdaq: ANT" / "It's here!", with Discord's elapsed timer counting from the opening bell.
 export function activity(config, now = Math.floor(Date.now() / 1000), offset) {
   const where = phase(config, now);
@@ -87,6 +90,9 @@ export function activity(config, now = Math.floor(Date.now() / 1000), offset) {
     name: config.title,
     assets: { large_image: config.image, large_text: `${config.title} · ${date}` },
   };
+  const left = config.targetAt - now;
+  // The built-in galaxy carries the count; a picture of your own stays as it is.
+  if (where === 'counting' && config.image === GALAXY_URL) card.assets.large_image = countArtUrl(countLabel(left)) ?? GALAXY_URL;
   if (where === 'trading') {
     card.details = `Now trading on ${listing}`;
     card.state = "It's here!";
@@ -94,9 +100,9 @@ export function activity(config, now = Math.floor(Date.now() / 1000), offset) {
     return card;
   }
   card.details = config.showDate ? `${listing} · ${date}` : listing;
-  card.state = countdownLine(config, now, offset);
-  if (!config.showDate) card.assets.large_text = config.title;
-  if (config.targetAt - now <= DAY) card.timestamps = { end: config.targetAt };
+  card.state = countdownWords(left);
+  card.assets.large_text = `${config.showDate ? `${config.title} · ${date}` : config.title} · ${countdownLine(config, now, offset)}`;
+  card.timestamps = { end: config.targetAt };
   return card;
 }
 
