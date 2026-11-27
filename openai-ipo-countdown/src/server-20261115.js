@@ -1,3 +1,4 @@
+import { SavedMode, DisplayLease, startCoordinator } from './presence-runtime-20261127.js';
 import http from 'node:http';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +19,9 @@ const origin = `http://127.0.0.1:${port}`;
 let config = validateConfig();
 try { config = validateConfig(JSON.parse(readFileSync(configPath, 'utf8'))); } catch { /* Setup stays available. */ }
 const presence = new Presence();
-presence.setMode(config.automaticOnStart ? 'manual' : 'off');
+const savedMode = new SavedMode(join(root, '.local'), ['off', 'manual']);
+const displayLease = new DisplayLease();
+presence.setMode(savedMode.read(config.automaticOnStart ? 'manual' : 'off'));
 const rpc = new DiscordRPC();
 let message = 'Ready.';
 let published = false;
@@ -61,6 +64,12 @@ async function sync() {
       message = idleMessage(now);
       return;
     }
+    if (!displayLease.allows()) {
+      if (rpc.ready && lastSent !== null) await rpc.setActivity(null);
+      published = false; lastSent = null; rpc.disconnect();
+      message = 'Sharing is enabled; another enabled app is taking its turn.';
+      return;
+    }
     if (Date.now() < retryAt) return;
     await rpc.connect(config.clientId);
     retryAt = 0;
@@ -71,7 +80,7 @@ async function sync() {
       await rpc.setActivity(payload);
       lastSent = signature;
     }
-    published = true;
+    published = lastSent != null;
     message = 'Activity accepted by Discord. Your Discord settings control who sees it.';
   } catch (error) {
     published = false;
@@ -122,7 +131,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/api/status') {
       const now = Math.floor(Date.now() / 1000);
-      return send(res, 200, { app: EDITION.app, version: VERSION, identity: SOURCE_IDENTITY, config, mode: presence.mode,
+      return send(res, 200, { app: EDITION.app, version: VERSION, identity: SOURCE_IDENTITY, coordinationVersion: 1, eligible: !!config.clientId && presence.mode !== 'off' && !!activity(config, Math.floor(Date.now() / 1000)), coordinated: displayLease.until > Date.now(), config, mode: presence.mode,
         published, connected: rpc.ready, message, startupEnabled: startupEnabled(), now, phase: phase(config, now),
         card: activity(config, now), bell: bellLabel(config, phase(config, now) === 'trading'), count: phase(config, now) === 'counting' ? labelText(countLabel(config.targetAt - now)) : null });
     }
@@ -146,7 +155,21 @@ const server = http.createServer(async (req, res) => {
         void sync();
         return send(res, 200, { ok: true });
       }
+      if (req.url === '/api/display') {
+        displayLease.update(input);
+        revision++; retryAt = 0;
+        await sync();
+        // A withdrawal acknowledgement must wait for an in-flight RPC update too.
+        const deadline = Date.now() + 2500;
+        while (running || rerun) {
+          if (Date.now() >= deadline) throw new Error('Display update is still pending.');
+          await new Promise(done => setTimeout(done, 25));
+        }
+        if (!input.selected && (published || rpc.ready)) throw new Error('Card withdrawal is still pending.');
+        return send(res, 200, { ok: true });
+      }
       if (req.url === '/api/mode') {
+        savedMode.save(input.mode);
         presence.setMode(input.mode);
         revision++;
         retryAt = 0;
@@ -189,6 +212,7 @@ async function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 server.listen(port, '127.0.0.1', () => {
+  startCoordinator(join(root, '..', '..', 'discord-tower', 'tools', 'presence-control', 'presence-control-20261030.mjs'));
   console.log(`OpenAI IPO Countdown: ${origin}\nClose with Quit app or Ctrl+C.`);
   void sync();
 });
